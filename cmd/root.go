@@ -23,11 +23,15 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/padiazg/ollama-tools/models/settings"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile string
+	s       = &settings.Settings{}
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -41,7 +45,9 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	// Run: func(cmd *cobra.Command, args []string) {
+	// 	fmt.Println("main")
+	// },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -94,10 +100,17 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 
+	bindEnvs(s)
+
+	if err := viper.Unmarshal(s); err != nil {
+		log.Fatalf("unable to decode into struct, %v", err)
+	}
+
+	// s.Show()
 }
 
 func setDefaults() {
-	// viper.SetDefault("webserver.port", 3001)
+	viper.SetDefault("ollamaurl", "http://localhost:11434")
 	// viper.SetDefault("webserver.adminport", 3001)
 	// viper.SetDefault("webserver.tls_enabled", false)
 	// viper.SetDefault("webserver.static.path", "./static")
