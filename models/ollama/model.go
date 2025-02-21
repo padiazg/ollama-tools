@@ -23,9 +23,17 @@ func (m ShowModel) getFamily() string {
 	return res[0][1]
 }
 
-func (m ShowModel) normalizeFamilyFields() {
-	var (
-		family = m.getFamily()
-	)
+func (m *ShowModel) normalizeFamilyFields() {
+	var family string
+
+	if family = m.getFamily(); family == "" {
+		return
+	}
+
+	re := regexp.MustCompile(fmt.Sprintf(`(?m)(?U)%s\.(context_length|embedding_length)`, family))
+	m.raw = re.ReplaceAllString(m.raw, "family.$1")
+}
+
+func (m *ShowModel) Parse() {
 
 }
