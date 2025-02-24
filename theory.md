@@ -13,7 +13,11 @@ quantizationBits &=  \begin{cases}
   32 & \text{if } quantizationLevel = \text{F32} \\
   12 & otherwise
 \end{cases} \\
-\\
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
 bytesPerParameter &= \begin{cases} 
 4.0/8.0 & \text{if } quantizationBits = 4 & \text{4-bit quantization ≈ 0.5 bytes per parameter}\\
 0.625 & \text{if } quantizationBits = 5 & \text{5-bit quantization ≈ 0.625 bytes per parameter} \\
@@ -22,7 +26,11 @@ bytesPerParameter &= \begin{cases}
 4.0 & \text{if } quantizationBits = 32 & \text{32-bit floating point = 4 bytes per parameter}  \\
 1.5 & otherwise & \text{For GGUF/GGML models with unspecified quantization, default to 1.5 bytes average} 
 \end{cases} \\
-\\
+\end{aligned}
+$$ 
+
+$$
+\begin{aligned}
 systemRAMMultiplier &= \begin{cases}
 1.1 & \text{if } quantizationBits &= 4 & \text{INT4 most efficient} \\
 1.15 & \text{if } quantizationBits &= 5 & \\
