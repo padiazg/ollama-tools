@@ -127,7 +127,7 @@ We can estimate the RAM requirement without downloading the model. You must get 
 Values:
 - _parameter count_: in units, not in billions or millions. 
 - _context length_: in units, not in kilos.
-- _quantization level_: the string as found in the page (Q4_K_M, Q4_K_S, F16, F32, etc). The app will try to trabslate it to bits.
+- _quantization level_: the string as found in the page (Q4_K_M, Q4_K_S, F16, F32, etc). The app will try to translate it to bits.
 ```shell
 $ ollama-tools estimate --help
 Estimates the RAM rwquirement based on few parameters without the need to download any model
