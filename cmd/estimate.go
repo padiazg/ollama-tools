@@ -13,10 +13,9 @@ import (
 // estimateCmd represents the estimate command
 var estimateCmd = &cobra.Command{
 	Use:   "estimate",
-	Short: "A brief description of your command",
-	Long:  ``,
+	Short: "Estimates the RAM requirement based on few paramaters ",
+	Long:  `Estimates the RAM rwquirement based on few parameters without the need to download any model`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("estimate called")
 		var (
 			parameter_count    int64
 			context_length     int

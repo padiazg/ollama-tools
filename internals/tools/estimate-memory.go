@@ -30,9 +30,9 @@ func EstimateMemory(parameter_count int64, context_length int, quantization_leve
 }
 
 func PrintEstimatedMemoryPlain(mem *ollama.MemoryEstimation) {
-	fmt.Printf("\nMemory Breakdown:\n")
-	fmt.Printf("  Model Weights Memory: %s\n", FormatMemorySize(mem.BaseModelSize))
-	fmt.Printf("  KV Cache (for context): %s\n", FormatMemorySize(mem.KVCacheSize))
-	fmt.Printf("  GPU VRAM: %s\n", FormatMemorySize(mem.GPURAM))
-	fmt.Printf("  System RAM: %s\n", FormatMemorySize(mem.SystemRAM))
+	fmt.Printf("\n  Memory Breakdown:\n")
+	fmt.Printf("    Model Weights Memory: %s\n", FormatMemorySize(mem.BaseModelSize))
+	fmt.Printf("    KV Cache (for context): %s\n", FormatMemorySize(mem.KVCacheSize))
+	fmt.Printf("    GPU VRAM: %s\n", FormatMemorySize(mem.GPURAM))
+	fmt.Printf("    System RAM: %s\n", FormatMemorySize(mem.SystemRAM))
 }
