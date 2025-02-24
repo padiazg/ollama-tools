@@ -18,7 +18,7 @@ quantizationBits &=  \begin{cases}
 \\
 \\
 bytesPerParameter &= \begin{cases} 
-4.0/8.0 & \text{if } quantizationBits = 4 & \text{4-bit quantization ≈ 0.5 bytes per parameter} \\
+0.5 & \text{if } quantizationBits = 4 & \text{4-bit quantization ≈ 0.5 bytes per parameter} \\
 0.625 & \text{if } quantizationBits = 5 & \text{5-bit quantization ≈ 0.625 bytes per parameter} \\
 1.0 & \text{if } quantizationBits = 8 & \text{8-bit quantization = 1 byte per parameter} \\
 2.0 & \text{if } quantizationBits = 16 & \text{16-bit floating point = 2 bytes per parameter} \\
