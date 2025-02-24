@@ -48,6 +48,7 @@ $$
 ## Formulas:
 For the GPU VRAM estimation let's sum the base model size, the key-value cache size and the GPU overhead.  
 We need to apply a multiplier based on the quantization level for the total system ram.   
+
 $$
 \begin{aligned}
 BaseModelSize &= (ParametersCount * BytesPerParameter) / 1Gb \\ \\
