@@ -26,6 +26,8 @@ bytesPerParameter &= \begin{cases}
 1.5 & otherwise & \text{For GGUF/GGML models with unspecified quantization, default to 1.5 bytes average} \\
 \end{cases}
 \\ 
+\text{Basically}: \\
+bytesPerParameter &= \frac{quantizationBits}{8} \\
 \\
 \\
 systemRAMMultiplier &= \begin{cases}
