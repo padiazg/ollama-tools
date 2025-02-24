@@ -1,8 +1,8 @@
 # The theory
-In fact it's more my notes about how to come to a number for an estimation on RAM requirements for running a model. All of them were taken from other projects and looking around on several pages.
+In fact, it's more my notes about how to come to a number for an estimation of RAM requirements for running a model. All of them were taken from other projects and looked around on several pages.
 
 ## Tables
-Here are the values used in the calculations based on the quantization level.
+Here are the values used in the calculations based on the quantization level.   
 $$
 \begin{aligned}
 quantizationBits &=  \begin{cases} 
@@ -34,11 +34,11 @@ systemRAMMultiplier &= \begin{cases}
 \\
 1Gb &= 1073741824
 \end{aligned}
-$$
+$$  
 
 ## Formulas:
-For the GPU VRAM estimation lets sum the base model size, the key-value cache size and the gpu overhead.  
-For the total system ram we need to apply a multiplier based on the quantization level.
+For the GPU VRAM estimation let's sum the base model size, the key-value cache size and the GPU overhead.  
+We need to apply a multiplier based on the quantization level for the total system ram.   
 $$
 \begin{aligned}
 BaseModelSize &= (ParametersCount * BytesPerParameter) / 1Gb \\ \\
@@ -48,4 +48,4 @@ GPUOverhead &= BaseModelSize * .1 \\ \\
 TotalGPURAM &= BaseModelSizeGB + KVCacheSize + GPUOverhead \\ \\
 TotalSystemRAM &= TotalGPURAM * SystemRAMMultiplier \\ 
 \end{aligned}
-$$
+$$   
