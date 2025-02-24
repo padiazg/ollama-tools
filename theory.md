@@ -11,7 +11,7 @@ quantizationBits &=  \begin{cases}
   8 & \text{if } quantizationLevel = \text{Q8} \\
   16 & \text{if } quantizationLevel = \text{F16} \\
   32 & \text{if } quantizationLevel = \text{F32} \\
-  12 & otherwise
+  12 & otherwise \\
 \end{cases} \\
 \end{aligned}
 $$
@@ -24,7 +24,7 @@ bytesPerParameter &= \begin{cases}
 1.0 & \text{if } quantizationBits = 8 & \text{8-bit quantization = 1 byte per parameter} \\
 2.0 & \text{if } quantizationBits = 16 & \text{16-bit floating point = 2 bytes per parameter} \\
 4.0 & \text{if } quantizationBits = 32 & \text{32-bit floating point = 4 bytes per parameter}  \\
-1.5 & otherwise & \text{For GGUF/GGML models with unspecified quantization, default to 1.5 bytes average} 
+1.5 & otherwise & \text{For GGUF/GGML models with unspecified quantization, default to 1.5 bytes average} \\
 \end{cases} \\
 \end{aligned}
 $$ 
@@ -37,10 +37,10 @@ systemRAMMultiplier &= \begin{cases}
 1.0 & \text{if } quantizationBits &= 8  & \text{INT8 more efficient} \\
 2.0 & \text{if } quantizationBits &= 16 & \text{FP16 baseline} \\
 4.0 & \text{if } quantizationBits &= 32 & \text{FP32 needs more headroom} \\
-1.5 & otherwise
+1.5 & otherwise \\
 \end{cases} \\
 \\
-1Gb &= 1073741824
+1Gb &= 1073741824 \\
 \end{aligned}
 $$  
 
