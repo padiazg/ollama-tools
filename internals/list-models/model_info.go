@@ -7,8 +7,8 @@ import (
 	"io"
 	"net/http"
 	"regexp"
-	"time"
 
+	"github.com/padiazg/ollama-tools/internals/client"
 	"github.com/padiazg/ollama-tools/models/ollama"
 	"github.com/padiazg/ollama-tools/models/settings"
 )
@@ -18,50 +18,55 @@ const (
 	ONE_GB      = 1_073_741_824 // 1024 * 1024 * 1024
 )
 
+// HTTPClient to help create mocks at the tests
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 func GetModelInfo(cfg *settings.Settings, modelName string) (*ollama.Model, error) {
 	var (
-		client = http.Client{Timeout: time.Duration(1) * time.Second}
-		err    error
-		req    *http.Request
-		res    *http.Response
-		model  = &ollama.Model{}
-		body   []byte
-		raw    string
+		err        error
+		req        *http.Request
+		model      = &ollama.Model{}
+		restClient = client.New(&client.ResClientConfig{
+			OnDecode: func(rc io.ReadCloser, i interface{}) error {
+				var (
+					body []byte
+					raw  string
+					err  error
+				)
+
+				body, err = io.ReadAll(rc)
+				if err != nil {
+					return fmt.Errorf("GetModelInfo/OnDecode reading response: %+v", err)
+				}
+
+				if raw, err = normalizeFamilyFields(string(body)); err != nil {
+					return fmt.Errorf("GetModelInfo/OnDecode normalizing response: %v", err)
+				}
+
+				if err := json.Unmarshal([]byte(raw), i); err != nil {
+					return fmt.Errorf("GetModelInfo/OnDecode parsing response: %v", err)
+				}
+
+				return nil
+			},
+		})
 	)
 
 	if req, err = http.NewRequest(
 		http.MethodPost,
 		cfg.OllamaUrl+apiPathShow,
 		bytes.NewReader([]byte(`{"model": "`+modelName+`"}`))); err != nil {
-		return nil, fmt.Errorf("GetModel creating request: %v\n", err)
+		return nil, fmt.Errorf("GetModelInfo creating request: %v\n", err)
 	}
 
-	req.Header.Add("Accept", "application/josn")
-	if res, err = client.Do(req); err != nil {
-		return nil, fmt.Errorf("GetModel calling api: %v\n", err)
+	if err = restClient.Request(req, model); err != nil {
+		return nil, fmt.Errorf("GetTags calling the api: %v\n", err)
 	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("GetModel status code: %d\n", res.StatusCode)
-	}
-
-	body, err = io.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("GetModel reading response: %+v", err)
-	}
-
-	if raw, err = normalizeFamilyFields(string(body)); err != nil {
-		return nil, fmt.Errorf("GetModel normalizing response: %v", err)
-	}
-
-	if err := json.Unmarshal([]byte(raw), model); err != nil {
-		return nil, fmt.Errorf("GetModel parsing response: %v", err)
-	}
-
-	// model.Details.ParseQuantizationLevel()
 
 	return model, nil
+
 }
 
 // getFamily recovers value for {"details": {"family": "..."}} from the unprocessed response
@@ -79,26 +84,6 @@ func getFamily(raw string) (string, error) {
 
 // normalizeFamilyFields normalize fields that starts with the family name at {"model_info": {...}} so
 // those field/values ara unmarshaled to prefedined fields (ContextLength, EmbeddingLength) in the struct
-/* examples:
-{
-	"details": {
-		"family": "llama",
-	},
-	"model_info": {
-		"llama.context_length": 131072,
-		"llama.embedding_length": 4096,
-	}
-}
-{
-	"details": {
-		"family": "qwen2",
-	},
-	"model_info": {
-		"qwen2.context_length": 131072,
-		"qwen2.embedding_length": 5120
-	}
-}
-*/
 func normalizeFamilyFields(raw string) (string, error) {
 	var (
 		family string
