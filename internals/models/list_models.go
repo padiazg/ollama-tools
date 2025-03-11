@@ -1,4 +1,4 @@
-package listmodels
+package models
 
 import (
 	"fmt"
@@ -112,7 +112,7 @@ func ListTable(cfg *settings.Settings, model_name string) {
 
 		t.AppendRow([]interface{}{
 			tag.Name,
-			text.AlignRight.Apply(fmt.Sprintf("%s", tools.FormatParamCount(model.ModelInfo.ParameterCount)), 8),
+			text.AlignRight.Apply(tools.FormatParamCount(model.ModelInfo.ParameterCount), 8),
 			text.AlignRight.Apply(fmt.Sprintf("%d", model.ModelInfo.ParameterCount), 16),
 			text.AlignLeft.Apply(model.Details.QuantizationLevel, 8),
 			text.AlignRight.Apply(fmt.Sprintf("%d", tools.QuantizationBits(tools.NormalizeQuantizationLevel(model.Details.QuantizationLevel))), 6),

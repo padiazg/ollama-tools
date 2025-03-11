@@ -6,7 +6,7 @@ package cmd
 import (
 	"fmt"
 
-	list_models "github.com/padiazg/ollama-tools/internals/list-models"
+	"github.com/padiazg/ollama-tools/internals/models"
 	"github.com/spf13/cobra"
 )
 
@@ -43,9 +43,9 @@ You can pass the model-name as an argument or using the --model-name flag`,
 		}
 
 		if as_table {
-			list_models.ListTable(s, model_name)
+			models.ListTable(s, model_name)
 		} else {
-			list_models.List(s, model_name)
+			models.List(s, model_name)
 		}
 	},
 }

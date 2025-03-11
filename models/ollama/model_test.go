@@ -77,68 +77,52 @@ func hasError(want bool) CheckModelFn {
 	}
 }
 
-// func TestModel_getFamily(t *testing.T) {
-// 	for _, tt := range models {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			m := &Model{raw: tt.raw}
-// 			if got := m.getFamily(); got != tt.family {
-// 				t.Errorf("Model.getFamily() = %v, want %v", got, tt.family)
-// 			}
-// 		})
-// 	}
-// }
-
-// func TestModel_normalizeFamilyFields(t *testing.T) {
-// 	tests := []struct {
-// 		name    string
-// 		raw     string
-// 		want    string
-// 		wantErr bool
-// 	}{
-// 		{
-// 			name:    models[0].name,
-// 			raw:     models[0].raw,
-// 			want:    models[0].normalized,
-// 			wantErr: false,
-// 		},
-// 		{
-// 			name:    models[1].name,
-// 			raw:     models[1].raw,
-// 			want:    models[1].normalized,
-// 			wantErr: false,
-// 		},
-// 		{
-// 			name:    models[2].name,
-// 			raw:     models[2].raw,
-// 			want:    models[2].normalized,
-// 			wantErr: false,
-// 		},
-// 		{
-// 			name:    models[3].name,
-// 			raw:     models[3].raw,
-// 			want:    ``,
-// 			wantErr: true,
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		tt := tt
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			m := &Model{raw: tt.raw}
-// 			err := m.normalizeFamilyFields()
-// 			if (err != nil) != tt.wantErr {
-// 				t.Errorf("Model.normalizeFamilyFields() error = %v, wantErr %v", err, tt.wantErr)
-// 			}
-
-// 			if tt.wantErr {
-// 				return
-// 			}
-
-// 			if m.raw != tt.want {
-// 				t.Errorf("Model.getFamily() = %v, \nwant %v", m.raw, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+func Test_normalizeFamilyFields(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		want    string
+		wantErr bool
+	}{
+		{
+			name:    models[0].name,
+			raw:     models[0].raw,
+			want:    models[0].normalized,
+			wantErr: false,
+		},
+		{
+			name:    models[1].name,
+			raw:     models[1].raw,
+			want:    models[1].normalized,
+			wantErr: false,
+		},
+		{
+			name:    models[2].name,
+			raw:     models[2].raw,
+			want:    models[2].normalized,
+			wantErr: false,
+		},
+		{
+			name:    models[3].name,
+			raw:     models[3].raw,
+			want:    ``,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := replaceFamilyFields([]byte(tt.raw))
+			if (err != nil) != tt.wantErr {
+				t.Errorf("normalizeFamilyFields() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if string(got) != tt.want {
+				t.Errorf("normalizeFamilyFields() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 // func TestModel_Parse(t *testing.T) {
 // 	var (

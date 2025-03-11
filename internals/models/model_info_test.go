@@ -1,4 +1,4 @@
-package listmodels
+package models
 
 import (
 	"net/http"
@@ -98,102 +98,6 @@ func TestGetModelInfo(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("GetModelInfo() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_getFamily(t *testing.T) {
-	var (
-		tests = []struct {
-			name    string
-			raw     string
-			want    string
-			wantErr bool
-		}{
-			{
-				name:    models[0].name,
-				raw:     models[0].raw,
-				want:    models[0].family,
-				wantErr: false,
-			},
-			{
-				name:    models[1].name,
-				raw:     models[1].raw,
-				want:    models[1].family,
-				wantErr: false,
-			},
-			{
-				name:    models[2].name,
-				raw:     models[2].raw,
-				want:    models[2].family,
-				wantErr: false,
-			},
-			{
-				name:    models[3].name,
-				raw:     models[3].raw,
-				wantErr: true,
-			},
-		}
-	)
-
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := getFamily(tt.raw)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("getFamily() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if err != nil && got != tt.want {
-				t.Errorf("getFamily() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_normalizeFamilyFields(t *testing.T) {
-	tests := []struct {
-		name    string
-		raw     string
-		want    string
-		wantErr bool
-	}{
-		{
-			name:    models[0].name,
-			raw:     models[0].raw,
-			want:    models[0].normalized,
-			wantErr: false,
-		},
-		{
-			name:    models[1].name,
-			raw:     models[1].raw,
-			want:    models[1].normalized,
-			wantErr: false,
-		},
-		{
-			name:    models[2].name,
-			raw:     models[2].raw,
-			want:    models[2].normalized,
-			wantErr: false,
-		},
-		{
-			name:    models[3].name,
-			raw:     models[3].raw,
-			want:    ``,
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := normalizeFamilyFields(tt.raw)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("normalizeFamilyFields() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("normalizeFamilyFields() = %v, want %v", got, tt.want)
 			}
 		})
 	}

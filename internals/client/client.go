@@ -1,14 +1,17 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
 type ResClientConfig struct {
+	Ctx      context.Context
 	OnDecode func(io.ReadCloser, interface{}) error
 }
 
@@ -17,6 +20,8 @@ type RestClient struct {
 	jsonUnmarshal  func(data []byte, v any) error
 	httpNewRequest func(method string, url string, body io.Reader) (*http.Request, error)
 	onDecode       func(io.ReadCloser, interface{}) error
+	lock           *sync.Mutex
+	ctx            context.Context
 }
 
 func New(cfg *ResClientConfig) *RestClient {
@@ -35,10 +40,15 @@ func (c *RestClient) New(cfg *ResClientConfig) *RestClient {
 		}
 	}
 
+	if cfg.Ctx != nil {
+		c.ctx = cfg.Ctx
+	}
+
 	c = &RestClient{
 		jsonUnmarshal:  json.Unmarshal,
 		httpNewRequest: http.NewRequest,
 		onDecode:       cfg.OnDecode,
+		lock:           &sync.Mutex{},
 	}
 
 	return c
@@ -46,6 +56,8 @@ func (c *RestClient) New(cfg *ResClientConfig) *RestClient {
 
 func (c *RestClient) getClient() HTTPClient {
 	if c.client == nil {
+		c.lock.Lock()
+		defer c.lock.Unlock()
 		c.client = &http.Client{Timeout: time.Duration(1) * time.Second}
 	}
 
@@ -58,14 +70,15 @@ func (c *RestClient) Request(req *http.Request, v interface{}) error {
 		res    *http.Response
 		err    error
 	)
+
 	req.Header.Add("Accept", "application/josn")
 	if res, err = client.Do(req); err != nil {
-		return fmt.Errorf("request: calling api %v\n", err)
+		return fmt.Errorf("request: calling api %v", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode < http.StatusOK || res.StatusCode >= http.StatusBadRequest {
-		return fmt.Errorf("Get status code: %d\n", res.StatusCode)
+		return fmt.Errorf("response status code: %d", res.StatusCode)
 	}
 
 	if err = c.onDecode(res.Body, v); err != nil {
