@@ -27,5 +27,13 @@
             "program": "${workspaceFolder}",
             "args": ["list-models","-t"]
         },
+        {
+            "name": "list-model-phi4:latest",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}",
+            "args": ["list-models"]
+        },
     ]
 }
