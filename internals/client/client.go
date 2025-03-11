@@ -31,10 +31,7 @@ func (c *RestClient) New(cfg *ResClientConfig) *RestClient {
 
 	if cfg.OnDecode == nil {
 		cfg.OnDecode = func(rc io.ReadCloser, v interface{}) error {
-			if err := json.NewDecoder(rc).Decode(v); err != nil {
-				return err
-			}
-			return nil
+			return json.NewDecoder(rc).Decode(v)
 		}
 	}
 
