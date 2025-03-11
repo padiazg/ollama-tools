@@ -42,11 +42,13 @@ You can pass the model-name as an argument or using the --model-name flag`,
 			model_name = args[0]
 		}
 
-		if as_table {
-			models.ListTable(s, model_name)
-		} else {
-			models.List(s, model_name)
-		}
+		models.List(s, model_name, as_table)
+
+		// if as_table {
+		// 	models.ListTable(s, model_name)
+		// } else {
+
+		// }
 	},
 }
 

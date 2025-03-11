@@ -20,6 +20,10 @@ func GetTags(cfg *settings.Settings) (*ollama.Tags, error) {
 	)
 	defer c.Close()
 
+	if cfg.Transport != nil {
+		c.SetTransport(cfg.Transport)
+	}
+
 	res, err := c.R().
 		SetHeader("Accept", "application/josn").
 		Get(cfg.OllamaUrl + apiPathTags)

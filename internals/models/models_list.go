@@ -26,13 +26,16 @@ type nextData struct {
 
 type nextFn func() nextData
 
-func ModelsInfoList(cfg *settings.Settings, model_name string) []*ModelItem {
-	next := modelsInfoGenerator(cfg, model_name)
+func ModelsInfoList(cfg *settings.Settings, model_name string) ([]*ModelItem, error) {
+	next, err := modelsInfoGenerator(cfg, model_name)
+	if err != nil {
+		return nil, err
+	}
 
-	return modelsInfoList(next)
+	return modelsInfoList(next), nil
 }
 
-func modelsInfoGenerator(cfg *settings.Settings, model_name string) func() nextData {
+func modelsInfoGenerator(cfg *settings.Settings, model_name string) (func() nextData, error) {
 	var (
 		tags  *ollama.Tags
 		err   error
@@ -41,7 +44,7 @@ func modelsInfoGenerator(cfg *settings.Settings, model_name string) func() nextD
 
 	if model_name == "" {
 		if tags, err = GetTags(cfg); err != nil {
-			fmt.Printf("List getting tags: %v\n", err)
+			return nil, fmt.Errorf("getting tags: %v", err)
 		}
 	} else {
 		tags = &ollama.Tags{
@@ -59,7 +62,7 @@ func modelsInfoGenerator(cfg *settings.Settings, model_name string) func() nextD
 		}
 		index++
 		return data
-	}
+	}, nil
 }
 
 func modelsInfoList(next nextFn) []*ModelItem {

@@ -1,6 +1,7 @@
 package ollama
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -15,13 +16,12 @@ type testModels struct {
 	family             string
 	parameter_size     string
 	quantization_level string
-	parameter_count    int
+	parameter_count    int64
 	context_length     int
 	embedding_length   int
 }
 
 var (
-	err        error
 	checkModel = func(fns ...CheckModelFn) []CheckModelFn { return fns }
 
 	models = []testModels{
@@ -65,17 +65,6 @@ var (
 		},
 	}
 )
-
-func hasError(want bool) CheckModelFn {
-	return func(t *testing.T, np *Model) {
-		t.Helper()
-		if want {
-			assert.NotNil(t, err, "hasError: error expected, none produced")
-		} else {
-			assert.Nil(t, err, "hasError = [+%v], no error expected")
-		}
-	}
-}
 
 func Test_normalizeFamilyFields(t *testing.T) {
 	tests := []struct {
@@ -124,93 +113,107 @@ func Test_normalizeFamilyFields(t *testing.T) {
 	}
 }
 
-// func TestModel_Parse(t *testing.T) {
-// 	var (
-// 		checkFamily = func(family string) CheckModelFn {
-// 			return func(t *testing.T, np *Model) {
-// 				t.Helper()
-// 				assert.Equalf(t, family, np.Details.Family, "checkFamily = %s, expected %s", np.Details.Family, family)
-// 			}
-// 		}
+func TestModel_UnmarshalJSON(t *testing.T) {
+	var (
+		err error
 
-// 		checkContextLength = func(contextLength int) CheckModelFn {
-// 			return func(t *testing.T, np *Model) {
-// 				t.Helper()
-// 				assert.Equalf(t, contextLength, np.ModelInfo.ContextLength, "checkContextLength = %d, expected %d", np.ModelInfo.ContextLength, contextLength)
-// 			}
-// 		}
+		hasError = func(want bool) CheckModelFn {
+			return func(t *testing.T, _ *Model) {
+				t.Helper()
+				if want {
+					assert.NotNil(t, err, "hasError: error expected, none produced")
+				} else {
+					assert.Nil(t, err, "hasError = [+%v], no error expected")
+				}
+			}
+		}
 
-// 		checkEmbeddingLength = func(embeddingLength int) CheckModelFn {
-// 			return func(t *testing.T, np *Model) {
-// 				t.Helper()
-// 				assert.Equalf(t, embeddingLength, np.ModelInfo.EmbeddingLength, "checkEmbeddingLength = %d, expected %d", np.ModelInfo.EmbeddingLength, embeddingLength)
-// 			}
-// 		}
+		checkFamily = func(family string) CheckModelFn {
+			return func(t *testing.T, np *Model) {
+				t.Helper()
+				assert.Equalf(t, family, np.Details.Family, "checkFamily = %s, expected %s", np.Details.Family, family)
+			}
+		}
 
-// 		checkParameterCount = func(parameterCount int) CheckModelFn {
-// 			return func(t *testing.T, np *Model) {
-// 				t.Helper()
-// 				assert.Equalf(t, parameterCount, np.ModelInfo.ParameterCount, "checkParameterCount = %d, expected %d", np.ModelInfo.ParameterCount, parameterCount)
-// 			}
-// 		}
+		checkContextLength = func(contextLength int) CheckModelFn {
+			return func(t *testing.T, np *Model) {
+				t.Helper()
+				assert.Equalf(t, contextLength, np.ModelInfo.ContextLength, "checkContextLength = %d, expected %d", np.ModelInfo.ContextLength, contextLength)
+			}
+		}
 
-// 		tests = []struct {
-// 			name    string
-// 			raw     string
-// 			wantErr bool
-// 			checks  []CheckModelFn
-// 		}{
-// 			{
-// 				name: models[0].name,
-// 				raw:  models[0].raw,
-// 				checks: checkModel(
-// 					hasError(false),
-// 					checkFamily(models[0].family),
-// 					checkContextLength(models[0].context_length),
-// 					checkEmbeddingLength(models[0].embedding_length),
-// 					checkParameterCount(models[0].parameter_count),
-// 				),
-// 			},
-// 			{
-// 				name: models[1].name,
-// 				raw:  models[1].raw,
-// 				checks: checkModel(
-// 					hasError(false),
-// 					checkFamily(models[1].family),
-// 					checkContextLength(models[1].context_length),
-// 					checkEmbeddingLength(models[1].embedding_length),
-// 					checkParameterCount(models[1].parameter_count),
-// 				),
-// 			},
-// 			{
-// 				name: models[2].name,
-// 				raw:  models[2].raw,
-// 				checks: checkModel(
-// 					hasError(false),
-// 					checkFamily(models[2].family),
-// 					checkContextLength(models[2].context_length),
-// 					checkEmbeddingLength(models[2].embedding_length),
-// 					checkParameterCount(models[2].parameter_count),
-// 				),
-// 			},
-// 			{
-// 				name: models[3].name,
-// 				raw:  models[3].raw,
-// 				checks: checkModel(
-// 					hasError(true),
-// 				),
-// 			},
-// 		}
-// 	)
-// 	for _, tt := range tests {
-// 		tt := tt
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			m := &Model{raw: tt.raw}
-// 			err = m.Parse()
+		checkEmbeddingLength = func(embeddingLength int) CheckModelFn {
+			return func(t *testing.T, np *Model) {
+				t.Helper()
+				assert.Equalf(t, embeddingLength, np.ModelInfo.EmbeddingLength, "checkEmbeddingLength = %d, expected %d", np.ModelInfo.EmbeddingLength, embeddingLength)
+			}
+		}
 
-// 			for _, c := range tt.checks {
-// 				c(t, m)
-// 			}
-// 		})
-// 	}
-// }
+		checkParameterCount = func(parameterCount int64) CheckModelFn {
+			return func(t *testing.T, np *Model) {
+				t.Helper()
+				assert.Equalf(t, parameterCount, np.ModelInfo.ParameterCount, "checkParameterCount = %d, expected %d", np.ModelInfo.ParameterCount, parameterCount)
+			}
+		}
+
+		tests = []struct {
+			name    string
+			raw     string
+			wantErr bool
+			checks  []CheckModelFn
+		}{
+			{
+				name: models[0].name,
+				raw:  models[0].raw,
+				checks: checkModel(
+					hasError(false),
+					checkFamily(models[0].family),
+					checkContextLength(models[0].context_length),
+					checkEmbeddingLength(models[0].embedding_length),
+					checkParameterCount(models[0].parameter_count),
+				),
+			},
+			{
+				name: models[1].name,
+				raw:  models[1].raw,
+				checks: checkModel(
+					hasError(false),
+					checkFamily(models[1].family),
+					checkContextLength(models[1].context_length),
+					checkEmbeddingLength(models[1].embedding_length),
+					checkParameterCount(models[1].parameter_count),
+				),
+			},
+			{
+				name: models[2].name,
+				raw:  models[2].raw,
+				checks: checkModel(
+					hasError(false),
+					checkFamily(models[2].family),
+					checkContextLength(models[2].context_length),
+					checkEmbeddingLength(models[2].embedding_length),
+					checkParameterCount(models[2].parameter_count),
+				),
+			},
+			{
+				name: models[3].name,
+				raw:  models[3].raw,
+				checks: checkModel(
+					hasError(true),
+				),
+			},
+		}
+	)
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Model{}
+			err = json.Unmarshal([]byte(tt.raw), m)
+
+			for _, c := range tt.checks {
+				c(t, m)
+			}
+		})
+	}
+}

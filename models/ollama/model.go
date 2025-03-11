@@ -11,6 +11,8 @@ type Model struct {
 	ModelInfo ModelInfo    `json:"model_info"`
 }
 
+// UnmarshalJSON will try to normalize field names before
+// unmarshaling
 func (m *Model) UnmarshalJSON(raw []byte) error {
 	var (
 		data []byte
@@ -27,7 +29,8 @@ func (m *Model) UnmarshalJSON(raw []byte) error {
 	return json.Unmarshal([]byte(data), &temp)
 }
 
-// getFamily recovers value for {"details": {"family": "..."}} from the unprocessed response
+// replaceFamilyFields will raplace the family name with a plain `model`
+// at the beggining of some fields
 func replaceFamilyFields(raw []byte) ([]byte, error) {
 	familySearch := regexp.
 		MustCompile(`(?U)"family":\s?"(.*)",`).

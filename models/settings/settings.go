@@ -3,12 +3,14 @@ package settings
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/spf13/viper"
 )
 
 type Settings struct {
 	OllamaUrl string `json:"ollamaurl"`
+	Transport http.RoundTripper
 }
 
 func (s *Settings) Show() {
