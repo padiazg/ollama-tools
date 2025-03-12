@@ -13,11 +13,11 @@ import (
 
 type DryRunTransport struct {
 	http.RoundTripper
-	execute func(r *http.Request) (*http.Response, error)
+	RoundTripFn func(r *http.Request) (*http.Response, error)
 }
 
 func (dr *DryRunTransport) RoundTrip(r *http.Request) (*http.Response, error) {
-	return dr.execute(r)
+	return dr.RoundTripFn(r)
 }
 
 // func TestModelsInfoList(t *testing.T) {
@@ -86,7 +86,7 @@ func Test_modelsInfoGenerator(t *testing.T) {
 				cfg: &settings.Settings{
 					OllamaUrl: "http://ollama:11434",
 					Transport: &DryRunTransport{
-						execute: func(r *http.Request) (*http.Response, error) {
+						RoundTripFn: func(r *http.Request) (*http.Response, error) {
 							var (
 								res *http.Response
 								err error
@@ -108,7 +108,7 @@ func Test_modelsInfoGenerator(t *testing.T) {
 				cfg: &settings.Settings{
 					OllamaUrl: "http://ollama:11434",
 					Transport: &DryRunTransport{
-						execute: func(r *http.Request) (*http.Response, error) {
+						RoundTripFn: func(r *http.Request) (*http.Response, error) {
 							var (
 								res *http.Response
 								err error
@@ -138,7 +138,7 @@ func Test_modelsInfoGenerator(t *testing.T) {
 				cfg: &settings.Settings{
 					OllamaUrl: "http://ollama:11434",
 					Transport: &DryRunTransport{
-						execute: func(r *http.Request) (*http.Response, error) {
+						RoundTripFn: func(r *http.Request) (*http.Response, error) {
 							return nil, fmt.Errorf("from http-client-mock")
 						},
 					},
