@@ -49,6 +49,7 @@ func Test_modelsInfoGenerator(t *testing.T) {
 	var (
 		checkModels = func(models []string) checkModelsInfoGeneratorFn {
 			return func(t *testing.T, next nextFn) {
+				t.Helper()
 				var (
 					count    = 0
 					expected = len(models)
