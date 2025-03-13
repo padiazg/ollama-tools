@@ -112,8 +112,7 @@ func Test_modelsInfoGenerator(t *testing.T) {
 
 							res = &http.Response{
 								StatusCode: http.StatusOK,
-								// Body:       io.NopCloser(strings.NewReader(`{"models":[{"name":"deepseek-r1:7b","model":"deepseek-r1:7b","modified_at":"2025-03-11T15:37:14.423620816-03:00","size":4683075271,"digest":"0a8c266910232fd3291e71e5ba1e058cc5af9d411192cf88b6d30e92b6e73163","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"7.6B","quantization_level":"Q4_K_M"}}]}`)),
-								Body: io.NopCloser(strings.NewReader(tagsList["one-model"].body)),
+								Body:       io.NopCloser(strings.NewReader(tagsList["one-model"].body)),
 							}
 
 							return res, err
@@ -215,14 +214,44 @@ func Test_modelsInfoReader(t *testing.T) {
 					for {
 						data, ok := <-pending
 						if !ok {
+							close(fetched)
 							break
 						}
 						fetched <- data
 					}
 				}()
 
-				value := <-fetched
-				assert.Equal(t, model_name, value)
+				value, ok := <-fetched
+				assert.Truef(t, ok, "channel expected to be open, currently closed")
+				assert.Equal(t, model_name, value.model_name)
+			}
+		}
+
+		checkEndReading = func() checkModelsInfoReader {
+			return func(t *testing.T, pending <-chan nextData) {
+				t.Helper()
+
+				go func() {
+					for {
+						_, ok := <-pending
+						assert.Falsef(t, ok, "channel expected to be closed, currently open")
+						break
+					}
+				}()
+			}
+		}
+
+		// we need a generator to send the empty value and trigger the
+		// end of the reader go routine and the close of the pending channel
+		generator = func(models []string) nextFn {
+			index := 0
+			return func() nextData {
+				if index == len(models) {
+					return nextData{model_name: ""}
+				}
+				data := nextData{model_name: models[index]}
+				index++
+				return data
 			}
 		}
 
@@ -230,41 +259,56 @@ func Test_modelsInfoReader(t *testing.T) {
 			name       string
 			model_name string
 			check      checkModelsInfoReader
+			next       nextFn
 		}{
 			{
 				name:       "success-one-model",
 				model_name: "test",
 				check:      checkModelName("test"),
+				next:       generator([]string{"test"}),
+			},
+			{
+				name:       "end-reading",
+				model_name: "",
+				check:      checkEndReading(),
+				next: func() nextData {
+					return nextData{model_name: ""}
+				},
 			},
 		}
 	)
+
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-
+			pending := modelsInfoReader(tt.next)
+			tt.check(t, pending)
 		})
 	}
 }
 
-// func Test_modelsInfoFetcher(t *testing.T) {
-// 	type args struct {
-// 		pending <-chan nextData
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 		want chan pair
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := modelsInfoFetcher(tt.args.pending); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("modelsInfoFetcher() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+func Test_modelsInfoFetcher(t *testing.T) {
+	//	type args struct {
+	//		pending <-chan nextData
+	//	}
+	//
+	//	tests := []struct {
+	//		name string
+	//		args args
+	//		want chan pair
+	//	}{
+	//
+	//		// TODO: Add test cases.
+	//	}
+	//
+	//	for _, tt := range tests {
+	//		t.Run(tt.name, func(t *testing.T) {
+	//			if got := modelsInfoFetcher(tt.args.pending); !reflect.DeepEqual(got, tt.want) {
+	//				t.Errorf("modelsInfoFetcher() = %v, want %v", got, tt.want)
+	//			}
+	//		})
+	//	}
+}
 
 // func Test_modelsInfoFill(t *testing.T) {
 // 	type args struct {
