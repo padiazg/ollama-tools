@@ -386,22 +386,19 @@ func Test_modelsInfoFetcher(t *testing.T) {
 			}
 		}
 
-		checkModels = func(model *ModelItem) checkModelsInfoReaderFn {
+		checkModel = func(model *ollama.Model) checkModelsInfoReaderFn {
 			return func(t *testing.T, fetched <-chan pair) {
 				data, ok := <-fetched
 				assert.True(t, ok)
 				assert.EqualValues(t, model, data.model)
-				// assert.NotNil(t, data.model)
-				// list := modelsInfoFill(fetched)
-				// assert.ElementsMatch(t, models, list)
 			}
 		}
 
 		checkError = func(errorMsg string) checkModelsInfoReaderFn {
 			return func(t *testing.T, fetched <-chan pair) {
-				list := modelsInfoFill(fetched)
-				assert.Len(t, list, 1)
-				assert.ErrorContains(t, list[0].Error, "test-GetModelInfo-error")
+				data, ok := <-fetched
+				assert.True(t, ok)
+				assert.ErrorContains(t, data.err, "test-GetModelInfo-error")
 			}
 		}
 
@@ -421,14 +418,7 @@ func Test_modelsInfoFetcher(t *testing.T) {
 						},
 					},
 				},
-				// check: checkModels([]*ModelItem{{
-				// 	Name:  modelPhi4,
-				// 	Model: modelsList[modelPhi4].model,
-				// }}),
-				check: checkModels(&ModelItem{
-					Name:  modelPhi4,
-					Model: modelsList[modelPhi4].model,
-				}),
+				check: checkModel(modelsList[modelPhi4].model),
 			},
 			{
 				name: "error",
