@@ -22,6 +22,10 @@ func GetModelInfo(cfg *settings.Settings, model_name string) (*ollama.Model, err
 	)
 	defer c.Close()
 
+	if cfg.Transport != nil {
+		c.SetTransport(cfg.Transport)
+	}
+
 	res, err := c.R().
 		SetBody([]byte(`{"model": "` + model_name + `"}`)).
 		Post(cfg.OllamaUrl + apiPathShow)
