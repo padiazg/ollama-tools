@@ -11,13 +11,29 @@ Check the theory [here](theory.md)
 ## Install
 Clone the repo
 ```shell
-git clone https://github.com/padiazg/ollama-tools.git
-cd ollama-tools
+$ git clone https://github.com/padiazg/ollama-tools.git
+$  cd ollama-tools
 ```
 Install dependencies and build
 ```shell
-go mod tidy
-go build
+$ go mod tidy
+$ go build
+ 
+# or, to inject version data when building tag the repo first
+$ git tag v.0.0.1
+# then run make
+$ make
+
+# see version
+$ ./ollama-tools version
+Using config file: /Users/pato/.ollama-tools.yaml
+
+┏┓┓┓       
+┃┃┃┃┏┓┏┳┓┏┓
+┗┛┗┗┗┻┛┗┗┗┻   Ollama tools
+     ┓        Version: 0.0.2-dirty
+╋┏┓┏┓┃┏       Build: 2025-03-15T20:19:24-03:00
+┗┗┛┗┛┗┛       Commit: 136dea431808834b1455356e694aba8988998100
 ```
 
 ## Usage
@@ -164,6 +180,13 @@ Or use a configuration file. Create a file `~/.ollama-tools.yaml` and add this t
 ollamaurl: http:192.168.1.100:11434
 ```
 Then use the app as usual
+
+## ChangeLog
+v0.0.2
+- Refactored `List` (internals/models/list_models.go) to separate concern. Data is recovered then formated according to user rrequest.
+- `ModelsInfoList` (internals/models/models_list.go) retrieves data from the api using a generator/reader/worker pattern. Concurrency is achieved using go routines and channels.
+- `internals/models` has 100% test coverage with unit tests
+- Added version data and `version` parameter so diaplay it
 
 ## Contributing
 

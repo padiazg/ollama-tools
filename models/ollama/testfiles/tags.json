@@ -1,0 +1,209 @@
+{
+    "models": [
+      {
+        "name": "deepseek-r1:7b",
+        "model": "deepseek-r1:7b",
+        "modified_at": "2025-03-11T15:37:14.423620816-03:00",
+        "size": 4683075271,
+        "digest": "0a8c266910232fd3291e71e5ba1e058cc5af9d411192cf88b6d30e92b6e73163",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "7.6B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "qwen2.5-coder:7b",
+        "model": "qwen2.5-coder:7b",
+        "modified_at": "2025-02-26T13:02:11.408112713-03:00",
+        "size": 4683087519,
+        "digest": "2b0496514337a3d5901f1d253d01726c890b721e891335a56d6e08cedf3e2cb0",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "7.6B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "qwen2.5-coder:32b",
+        "model": "qwen2.5-coder:32b",
+        "modified_at": "2025-02-17T08:25:28.377144239-03:00",
+        "size": 19851349856,
+        "digest": "4bd6cbf2d094264457a17aab6bd6acd1ed7a72fb8f8be3cfb193f63c78dd56df",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "32.8B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "deepseek-r1:32b",
+        "model": "deepseek-r1:32b",
+        "modified_at": "2025-02-14T15:17:51.225699982-03:00",
+        "size": 19851337640,
+        "digest": "38056bbcbb2d068501ecb2d5ea9cea9dd4847465f1ab88c4d4a412a9f7792717",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "32.8B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "deepseek-r1:14b",
+        "model": "deepseek-r1:14b",
+        "modified_at": "2025-02-14T14:57:15.014266882-03:00",
+        "size": 8988112040,
+        "digest": "ea35dfe18182f635ee2b214ea30b7520fe1ada68da018f8b395b444b662d4f1a",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "14.8B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "phi4:14b",
+        "model": "phi4:14b",
+        "modified_at": "2025-02-14T14:57:14.375271104-03:00",
+        "size": 9053116391,
+        "digest": "ac896e5b8b34a1f4efa7b14d7520725140d5512484457fab45d2a4ea14c69dba",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "phi3",
+          "families": [
+            "phi3"
+          ],
+          "parameter_size": "14.7B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "llama3.3:latest",
+        "model": "llama3.3:latest",
+        "modified_at": "2025-02-14T12:56:07.927403067-03:00",
+        "size": 42520413916,
+        "digest": "a6eb4748fd2990ad2952b2335a95a7f952d1a06119a0aa6a2df6cd052a93a3fa",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "llama",
+          "families": [
+            "llama"
+          ],
+          "parameter_size": "70.6B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "deepseek-r1:latest",
+        "model": "deepseek-r1:latest",
+        "modified_at": "2025-02-14T12:40:06.647477779-03:00",
+        "size": 4683075271,
+        "digest": "0a8c266910232fd3291e71e5ba1e058cc5af9d411192cf88b6d30e92b6e73163",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen2",
+          "families": [
+            "qwen2"
+          ],
+          "parameter_size": "7.6B",
+          "quantization_level": "Q4_K_M"
+        }
+      },
+      {
+        "name": "nomic-embed-text:latest",
+        "model": "nomic-embed-text:latest",
+        "modified_at": "2025-01-09T17:09:33.309621807-03:00",
+        "size": 274302450,
+        "digest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "nomic-bert",
+          "families": [
+            "nomic-bert"
+          ],
+          "parameter_size": "137M",
+          "quantization_level": "F16"
+        }
+      },
+      {
+        "name": "deepseek-v2.5:latest",
+        "model": "deepseek-v2.5:latest",
+        "modified_at": "2025-01-08T23:01:47.56341213-03:00",
+        "size": 132912472044,
+        "digest": "409b2dd8a3c46a9e92dcfe317e016539c047c48aac3bc54cd4f11df310885ded",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "deepseek2",
+          "families": [
+            "deepseek2"
+          ],
+          "parameter_size": "235.7B",
+          "quantization_level": "Q4_0"
+        }
+      },
+      {
+        "name": "phind-codellama:latest",
+        "model": "phind-codellama:latest",
+        "modified_at": "2025-01-08T20:19:20.719467589-03:00",
+        "size": 19052056344,
+        "digest": "566e1b629c44bb8f94b5bbaad4add8fde95257d6953bc79dab0b74afc774def1",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "llama",
+          "families": [
+            "llama"
+          ],
+          "parameter_size": "34B",
+          "quantization_level": "Q4_0"
+        }
+      },
+      {
+        "name": "llama3.1:latest",
+        "model": "llama3.1:latest",
+        "modified_at": "2025-01-08T18:46:33.340224609-03:00",
+        "size": 4920753328,
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "llama",
+          "families": [
+            "llama"
+          ],
+          "parameter_size": "8.0B",
+          "quantization_level": "Q4_K_M"
+        }
+      }
+    ]
+  }
+  

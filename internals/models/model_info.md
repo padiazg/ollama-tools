@@ -30,6 +30,9 @@ At `model_info` there are fields that starts with the family name as we can see 
 	}
 }
 ```
-We need to recover the `context_length` and the `embedding_legth` values out of these fields, so I opted for the normalizing approach. We replace the family name for a common name before umarshaling the string into the models's struct. See `getFamily` for how do we get the family name and `normalizeFamilyFields` for how we replace the family names with a common value.
+We need to recover the `context_length` and the `embedding_legth` values out of these fields, so I opted for the normalizing approach. 
 
+~~We replace the family name for a common name before umarshaling the string into the models's struct. See `getFamily` for how do we get the family name and `normalizeFamilyFields` for how we replace the family names with a common value.~~
+
+The current approach is to implement a JsonMarshaler `func (m *Model) UnmarshalJSON(raw []byte) error` at `models/ollama/model.go`
 
