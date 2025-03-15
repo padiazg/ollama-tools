@@ -13,9 +13,85 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-type testTags struct {
-	body   string
-	models []string
+const (
+	modelPhi4     string = "phi4:latest"
+	modelLlama3_1 string = "llama3.1:latest"
+	modelDeepSeek string = "deepseek-r1:7b"
+	modelQwen     string = "qwen2.5-coder:7b"
+)
+
+type tags map[string]*ollama.TagModel
+type modelsInfo map[string]testModelsInfo
+
+func (t tags) getBody() string {
+	if len(t) == 0 {
+		return ""
+	}
+
+	tmp := ollama.Tags{}
+	for _, model := range t {
+		tmp.Models = append(tmp.Models, *model)
+	}
+
+	body, _ := json.Marshal(tmp)
+	return string(body)
+}
+
+func (t tags) getModels() (models []string) {
+	for _, tag := range t {
+		models = append(models, tag.Name)
+	}
+
+	return
+}
+
+func (t tags) filter(list []string) tags {
+	ret := tags{}
+	for _, key := range list {
+		if value, ok := t[key]; ok {
+			ret[key] = value
+		}
+	}
+	return ret
+}
+
+func (t tags) getConfig(wantError error) *settings.Settings {
+	body := t.getBody()
+	return &settings.Settings{
+		OllamaUrl: "http://ollama:11434",
+		Transport: &DryRunTransport{RoundTripFn: generalRoundTripper(body, wantError)},
+	}
+}
+
+func (m modelsInfo) filter(list []string) modelsInfo {
+	ret := modelsInfo{}
+	for _, key := range list {
+		if value, ok := m[key]; ok {
+			ret[key] = value
+		}
+	}
+	return ret
+}
+
+func (m modelsInfo) getModels(list []string) []*ModelItem {
+	modelItemList := make([]*ModelItem, 0, len(models))
+
+	for _, model := range list {
+		m, ok := m[model]
+		if !ok {
+			modelItemList = append(modelItemList, &ModelItem{
+				Error: fmt.Errorf("%s not found", model),
+			})
+			continue
+		}
+
+		modelItemList = append(modelItemList, &ModelItem{
+			Name:  model,
+			Model: m.model,
+		})
+	}
+
+	return modelItemList
 }
 
 type testModelsInfo struct {
@@ -24,24 +100,71 @@ type testModelsInfo struct {
 	model      *ollama.Model
 }
 
-const (
-	modelPhi4     string = "phi4:latest"
-	modelLlama3_1 string = "llama3.1:latest"
-)
-
 var (
-	tagsList = map[string]testTags{
-		"one-model": {
-			body:   `{"models":[{"name":"deepseek-r1:7b","model":"deepseek-r1:7b","modified_at":"2025-03-11T15:37:14.423620816-03:00","size":4683075271,"digest":"0a8c266910232fd3291e71e5ba1e058cc5af9d411192cf88b6d30e92b6e73163","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"7.6B","quantization_level":"Q4_K_M"}}]}`,
-			models: []string{"deepseek-r1:7b"},
+	tagsList = tags{
+		modelDeepSeek: &ollama.TagModel{
+			Name:       modelDeepSeek,
+			Model:      "deepseek-r1:7b",
+			ModifiedAt: "2025-03-11T15:37:14.423620816-03:00",
+			Size:       4683075271,
+			Digest:     "0a8c266910232fd3291e71e5ba1e058cc5af9d411192cf88b6d30e92b6e73163",
+			Details: ollama.TagModelDetails{
+				ParentModel:       "",
+				Format:            "gguf",
+				Family:            "qwen2",
+				Families:          []string{"qwen2"},
+				ParameterSize:     "7.6B",
+				QuantizationLevel: "Q4_K_M",
+			},
 		},
-		"two-models": {
-			body:   `{"models":[{"name":"deepseek-r1:7b","model":"deepseek-r1:7b","modified_at":"2025-03-11T15:37:14.423620816-03:00","size":4683075271,"digest":"0a8c266910232fd3291e71e5ba1e058cc5af9d411192cf88b6d30e92b6e73163","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"7.6B","quantization_level":"Q4_K_M"}},{"name":"qwen2.5-coder:7b","model":"qwen2.5-coder:7b","modified_at":"2025-02-26T13:02:11.408112713-03:00","size":4683087519,"digest":"2b0496514337a3d5901f1d253d01726c890b721e891335a56d6e08cedf3e2cb0","details":{"parent_model":"","format":"gguf","family":"qwen2","families":["qwen2"],"parameter_size":"7.6B","quantization_level":"Q4_K_M"}}]}`,
-			models: []string{"deepseek-r1:7b", "qwen2.5-coder:7b"},
+		modelQwen: &ollama.TagModel{
+			Name:       modelQwen,
+			Model:      "qwen2.5-coder:7b",
+			ModifiedAt: "2025-02-26T13:02:11.408112713-03:00",
+			Size:       4683087519,
+			Digest:     "2b0496514337a3d5901f1d253d01726c890b721e891335a56d6e08cedf3e2cb0",
+			Details: ollama.TagModelDetails{
+				ParentModel:       "",
+				Format:            "gguf",
+				Family:            "qwen2",
+				Families:          []string{"qwen2"},
+				ParameterSize:     "7.6B",
+				QuantizationLevel: "Q4_K_M",
+			},
+		},
+		modelPhi4: &ollama.TagModel{
+			Name:       modelPhi4,
+			Model:      "phi4:14b",
+			ModifiedAt: "2025-02-14T14:57:14.375271104-03:00",
+			Size:       9053116391,
+			Digest:     "ac896e5b8b34a1f4efa7b14d7520725140d5512484457fab45d2a4ea14c69dba",
+			Details: ollama.TagModelDetails{
+				ParentModel:       "",
+				Format:            "gguf",
+				Family:            "phi3",
+				Families:          []string{"phi3"},
+				ParameterSize:     "14.7B",
+				QuantizationLevel: "Q4_K_M",
+			},
+		},
+		modelLlama3_1: &ollama.TagModel{
+			Name:       modelLlama3_1,
+			Model:      "llama3.1:latest",
+			ModifiedAt: "2025-01-08T18:46:33.340224609-03:00",
+			Size:       4920753328,
+			Digest:     "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+			Details: ollama.TagModelDetails{
+				ParentModel:       "",
+				Format:            "gguf",
+				Family:            "llama",
+				Families:          []string{"llama"},
+				ParameterSize:     "8.0B",
+				QuantizationLevel: "Q4_K_M",
+			},
 		},
 	}
 
-	modelsList = map[string]testModelsInfo{
+	modelsList = modelsInfo{
 		modelPhi4: {
 			name:       modelPhi4,
 			normalized: `{"license":"Microsoft...SOFTWARE.","modelfile":"# Modelfile ...","parameters":"stop                           \"\u003c|im_start|\u003e\"\nstop                           \"\u003c|im_end|\u003e\"\nstop                           \"\u003c|im_sep|\u003e\"","template":"{{- range $i, $_ := .Messages }}\n{{- $last := eq (len (slice $.Messages $i)) 1 -}}\n\u003c|im_start|\u003e{{ .Role }}\u003c|im_sep|\u003e\n{{ .Content }}{{ if not $last }}\u003c|im_end|\u003e\n{{ end }}\n{{- if and (ne .Role \"assistant\") $last }}\u003c|im_end|\u003e\n\u003c|im_start|\u003eassistant\u003c|im_sep|\u003e\n{{ end }}\n{{- end }}","details":{"parent_model":"","format":"gguf","family":"phi3","families":["phi3"],"parameter_size":"14.7B","quantization_level":"Q4_K_M"},"model_info":{"general.architecture":"phi3","general.basename":"phi","general.file_type":15,"general.languages":["en"],"general.license":"mit","general.license.link":"https://huggingface.co/microsoft/phi-4/resolve/main/LICENSE","general.organization":"Microsoft","general.parameter_count":14659507200,"general.quantization_version":2,"general.size_label":"15B","general.tags":["phi","nlp","math","code","chat","conversational","text-generation"],"general.type":"model","general.version":"4","phi3.attention.head_count":40,"phi3.attention.head_count_kv":10,"phi3.attention.layer_norm_rms_epsilon":0.00001,"phi3.attention.sliding_window":131072,"phi3.block_count":40,"model.context_length":16384,"model.embedding_length":5120,"phi3.feed_forward_length":17920,"phi3.rope.dimension_count":128,"phi3.rope.freq_base":250000,"phi3.rope.scaling.original_context_length":16384,"tokenizer.ggml.bos_token_id":100257,"tokenizer.ggml.eos_token_id":100257,"tokenizer.ggml.merges":null,"tokenizer.ggml.model":"gpt2","tokenizer.ggml.padding_token_id":100257,"tokenizer.ggml.pre":"dbrx","tokenizer.ggml.token_type":null,"tokenizer.ggml.tokens":null},"modified_at":"2025-01-14T17:21:17.785607967-03:00"}`,
@@ -82,17 +205,72 @@ var (
 				},
 			},
 		},
-		// "nomic-embed-text": {
-		// 	name:               "nomic-embed-text:latest",
-		// 	raw:                `{"license":"Apache...the License.\n","modelfile":"# Modelfile ...","parameters":"num_ctx                        8192","template":"{{ .Prompt }}","details":{"parent_model":"","format":"gguf","family":"nomic-bert","families":["nomic-bert"],"parameter_size":"137M","quantization_level":"F16"},"model_info":{"general.architecture":"nomic-bert","general.file_type":1,"general.parameter_count":136727040,"nomic-bert.attention.causal":false,"nomic-bert.attention.head_count":12,"nomic-bert.attention.layer_norm_epsilon":1e-12,"nomic-bert.block_count":12,"nomic-bert.context_length":2048,"nomic-bert.embedding_length":768,"nomic-bert.feed_forward_length":3072,"nomic-bert.pooling_type":1,"nomic-bert.rope.freq_base":1000,"tokenizer.ggml.bos_token_id":101,"tokenizer.ggml.cls_token_id":101,"tokenizer.ggml.eos_token_id":102,"tokenizer.ggml.mask_token_id":103,"tokenizer.ggml.model":"bert","tokenizer.ggml.padding_token_id":0,"tokenizer.ggml.scores":null,"tokenizer.ggml.seperator_token_id":102,"tokenizer.ggml.token_type":null,"tokenizer.ggml.token_type_count":2,"tokenizer.ggml.tokens":null,"tokenizer.ggml.unknown_token_id":100},"modified_at":"2025-02-03T19:22:18.145435125-03:00"}`,
-		// 	normalized:         `{"license":"Apache...the License.\n","modelfile":"# Modelfile ...","parameters":"num_ctx                        8192","template":"{{ .Prompt }}","details":{"parent_model":"","format":"gguf","family":"nomic-bert","families":["nomic-bert"],"parameter_size":"137M","quantization_level":"F16"},"model_info":{"general.architecture":"nomic-bert","general.file_type":1,"general.parameter_count":136727040,"nomic-bert.attention.causal":false,"nomic-bert.attention.head_count":12,"nomic-bert.attention.layer_norm_epsilon":1e-12,"nomic-bert.block_count":12,"model.context_length":2048,"model.embedding_length":768,"nomic-bert.feed_forward_length":3072,"nomic-bert.pooling_type":1,"nomic-bert.rope.freq_base":1000,"tokenizer.ggml.bos_token_id":101,"tokenizer.ggml.cls_token_id":101,"tokenizer.ggml.eos_token_id":102,"tokenizer.ggml.mask_token_id":103,"tokenizer.ggml.model":"bert","tokenizer.ggml.padding_token_id":0,"tokenizer.ggml.scores":null,"tokenizer.ggml.seperator_token_id":102,"tokenizer.ggml.token_type":null,"tokenizer.ggml.token_type_count":2,"tokenizer.ggml.tokens":null,"tokenizer.ggml.unknown_token_id":100},"modified_at":"2025-02-03T19:22:18.145435125-03:00"}`,
-		// 	family:             "nomic-bert",
-		// 	context_length:     2048,
-		// 	embedding_length:   768,
-		// 	parameter_count:    136727040,
-		// 	parameter_size:     "137M",
-		// 	quantization_level: "F16",
-		// },
+	}
+
+	tagsRoundTripper = func(body string, wantError error) func(r *http.Request) (*http.Response, error) {
+		return func(r *http.Request) (*http.Response, error) {
+			if wantError != nil {
+				return nil, wantError
+			}
+
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+			}, nil
+		}
+	}
+
+	modelListRoundTripper = func(wantErr error) func(r *http.Request) (*http.Response, error) {
+		return func(r *http.Request) (*http.Response, error) {
+			type payload struct {
+				Model string `json:"model"`
+			}
+
+			if wantErr != nil {
+				return nil, wantErr
+			}
+
+			body := &payload{}
+
+			if err := json.NewDecoder(r.Body).Decode(body); err != nil {
+				return nil, fmt.Errorf("decoding response: %+v", err)
+			}
+
+			data, ok := modelsList[body.Model]
+			if !ok {
+				return &http.Response{StatusCode: http.StatusNotFound}, nil
+			}
+
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(data.normalized)),
+			}, nil
+		}
+	}
+
+	generalRoundTripper = func(body string, wantError error) func(r *http.Request) (*http.Response, error) {
+		return func(r *http.Request) (*http.Response, error) {
+			var (
+				res *http.Response
+				err error
+			)
+
+			switch r.URL.Path {
+			case apiPathTags:
+				return tagsRoundTripper(body, wantError)(r)
+			case apiPathShow:
+				return modelListRoundTripper(wantError)(r)
+			}
+
+			return res, err
+		}
+	}
+
+	getConfigModelsList = func(wantError error) *settings.Settings {
+		return &settings.Settings{
+			OllamaUrl: "http://ollama:11434",
+			Transport: &DryRunTransport{RoundTripFn: modelListRoundTripper(wantError)},
+		}
 	}
 )
 
@@ -105,28 +283,71 @@ func (dr *DryRunTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return dr.RoundTripFn(r)
 }
 
-// func TestModelsInfoList(t *testing.T) {
-// 	type args struct {
-// 		cfg        *settings.Settings
-// 		model_name string
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 		want []*ModelItem
-// 	}{
-// 		{
-// 			name: "",
-// 		},
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := ModelsInfoList(tt.args.cfg, tt.args.model_name); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("ModelsInfoList() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+func TestModelsInfoList(t *testing.T) {
+	var (
+		tests = []struct {
+			name         string
+			model_name   string
+			models       []string
+			wantErrorMsg string
+		}{
+			{
+				name:   modelPhi4,
+				models: []string{modelPhi4},
+			},
+			{
+				name:   modelPhi4 + "+" + modelLlama3_1,
+				models: []string{modelPhi4, modelLlama3_1},
+			},
+			{
+				name:         "error",
+				wantErrorMsg: "test-ModelsInfoList-error",
+			},
+		}
+	)
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			for _, tt := range tests {
+				tt := tt
+				t.Run(tt.name, func(t *testing.T) {
+					var (
+						tags           tags
+						cfg            *settings.Settings
+						want           []*ModelItem
+						wantError      error
+						wantModelsList []string
+					)
+
+					if tt.model_name == "" {
+						wantModelsList = tt.models
+					} else {
+						wantModelsList = []string{tt.model_name}
+					}
+
+					want = modelsList.getModels(wantModelsList)
+					tags = tagsList.filter(wantModelsList)
+
+					if tt.wantErrorMsg != "" {
+						wantError = fmt.Errorf(tt.wantErrorMsg)
+					}
+
+					cfg = tags.getConfig(wantError)
+					got, err := ModelsInfoList(cfg, tt.model_name)
+
+					if wantError != nil {
+						assert.ErrorContains(t, err, tt.wantErrorMsg)
+					} else {
+						if assert.NoError(t, err, "error not expected: %+v", err) {
+							assert.EqualValues(t, got, want)
+						}
+					}
+				})
+			}
+		})
+	}
+}
 
 func Test_modelsInfoGenerator(t *testing.T) {
 	type checkModelsInfoGeneratorFn func(*testing.T, nextFn)
@@ -160,75 +381,26 @@ func Test_modelsInfoGenerator(t *testing.T) {
 		}
 
 		tests = []struct {
-			name       string
-			model_name string
-			cfg        *settings.Settings
-			check      func(*testing.T, nextFn)
-			wantError  bool
+			name         string
+			model_name   string
+			models       []string
+			wantErrorMsg string
 		}{
 			{
-				name: "one-model",
-				cfg: &settings.Settings{
-					OllamaUrl: "http://ollama:11434",
-					Transport: &DryRunTransport{
-						RoundTripFn: func(r *http.Request) (*http.Response, error) {
-							var (
-								res *http.Response
-								err error
-							)
-
-							res = &http.Response{
-								StatusCode: http.StatusOK,
-								Body:       io.NopCloser(strings.NewReader(tagsList["one-model"].body)),
-							}
-
-							return res, err
-						},
-					},
-				},
-				check: checkModels(tagsList["one-model"].models),
+				name:   modelDeepSeek,
+				models: []string{modelDeepSeek},
 			},
 			{
-				name: "two-models",
-				cfg: &settings.Settings{
-					OllamaUrl: "http://ollama:11434",
-					Transport: &DryRunTransport{
-						RoundTripFn: func(r *http.Request) (*http.Response, error) {
-							var (
-								res *http.Response
-								err error
-							)
-
-							res = &http.Response{
-								StatusCode: http.StatusOK,
-								Body:       io.NopCloser(strings.NewReader(tagsList["two-models"].body)),
-							}
-
-							return res, err
-						},
-					},
-				},
-				check: checkModels(tagsList["two-models"].models),
+				name:   modelDeepSeek + "+" + modelQwen,
+				models: []string{modelDeepSeek, modelQwen},
 			},
 			{
-				name: "specific-models",
-				cfg: &settings.Settings{
-					OllamaUrl: "http://ollama:11434",
-				},
-				model_name: "fake-model",
-				check:      checkModels([]string{"fake-model"}),
+				name:       "specific-model",
+				model_name: modelPhi4,
 			},
 			{
-				name: "http-client-error",
-				cfg: &settings.Settings{
-					OllamaUrl: "http://ollama:11434",
-					Transport: &DryRunTransport{
-						RoundTripFn: func(r *http.Request) (*http.Response, error) {
-							return nil, fmt.Errorf("from http-client-mock")
-						},
-					},
-				},
-				wantError: true,
+				name:         "http-client-error",
+				wantErrorMsg: "from http-client-mock",
 			},
 		}
 	)
@@ -236,37 +408,82 @@ func Test_modelsInfoGenerator(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			next, err := modelsInfoGenerator(tt.cfg, tt.model_name)
-			if tt.wantError {
-				assert.Error(t, err, "error expected, not found")
+			var (
+				tags      tags
+				cfg       *settings.Settings
+				want      []string
+				wantError error
+			)
+
+			if tt.model_name == "" {
+				tags = tagsList.filter(tt.models)
+				want = tags.getModels()
+			} else {
+				want = []string{tt.model_name}
+			}
+
+			if tt.wantErrorMsg != "" {
+				wantError = fmt.Errorf(tt.wantErrorMsg)
+			}
+
+			cfg = tags.getConfig(wantError)
+			next, err := modelsInfoGenerator(cfg, tt.model_name)
+			if wantError != nil {
+				assert.ErrorContains(t, err, tt.wantErrorMsg)
 			} else {
 				if assert.NoError(t, err, "error not expected: %+v", err) {
-					tt.check(t, next)
+					checkModels(want)(t, next)
 				}
 			}
 		})
 	}
 }
 
-// func Test_modelsInfoList(t *testing.T) {
-// 	type args struct {
-// 		next nextFn
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 		want []*ModelItem
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := modelsInfoList(tt.args.next); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("modelsInfoList() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+func Test_modelsInfoList(t *testing.T) {
+	var (
+		generator = func(models []string) (nextFn, []*ModelItem) {
+			var (
+				modelItemList = modelsList.getModels(models)
+				index         = 0
+			)
+
+			return func() nextData {
+				if index == len(modelItemList) {
+					return nextData{model_name: ""}
+				}
+
+				data := nextData{
+					model_name: modelItemList[index].Name,
+					cfg:        getConfigModelsList(nil),
+				}
+				index++
+				return data
+			}, modelItemList
+		}
+
+		tests = []struct {
+			name   string
+			models []string
+		}{
+			{
+				name:   modelPhi4,
+				models: []string{modelPhi4},
+			},
+			{
+				name:   modelPhi4 + "+" + modelLlama3_1,
+				models: []string{modelPhi4, modelLlama3_1},
+			},
+		}
+	)
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			next, want := generator(tt.models)
+			got := modelsInfoList(next)
+			assert.EqualValues(t, got, want)
+		})
+	}
+}
 
 func Test_modelsInfoReader(t *testing.T) {
 	type checkModelsInfoReaderFn func(t *testing.T, pending <-chan nextData)
@@ -358,34 +575,6 @@ func Test_modelsInfoFetcher(t *testing.T) {
 	type checkModelsInfoReaderFn func(t *testing.T, fetched <-chan pair)
 
 	var (
-		modelListRoundtripper = func(wantErr error) func(r *http.Request) (*http.Response, error) {
-			return func(r *http.Request) (*http.Response, error) {
-				type payload struct {
-					Model string `json:"model"`
-				}
-
-				if wantErr != nil {
-					return nil, wantErr
-				}
-
-				body := &payload{}
-
-				if err := json.NewDecoder(r.Body).Decode(body); err != nil {
-					return nil, fmt.Errorf("decoding response: %+v", err)
-				}
-
-				data, ok := modelsList[body.Model]
-				if !ok {
-					return &http.Response{StatusCode: http.StatusNotFound}, nil
-				}
-
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body:       io.NopCloser(strings.NewReader(data.normalized)),
-				}, nil
-			}
-		}
-
 		checkModel = func(model *ollama.Model) checkModelsInfoReaderFn {
 			return func(t *testing.T, fetched <-chan pair) {
 				data, ok := <-fetched
@@ -411,12 +600,7 @@ func Test_modelsInfoFetcher(t *testing.T) {
 				name: "success",
 				data: nextData{
 					model_name: modelPhi4,
-					cfg: &settings.Settings{
-						OllamaUrl: "http://localhost:11434",
-						Transport: &DryRunTransport{
-							RoundTripFn: modelListRoundtripper(nil),
-						},
-					},
+					cfg:        getConfigModelsList(nil),
 				},
 				check: checkModel(modelsList[modelPhi4].model),
 			},
@@ -424,12 +608,7 @@ func Test_modelsInfoFetcher(t *testing.T) {
 				name: "error",
 				data: nextData{
 					model_name: modelPhi4,
-					cfg: &settings.Settings{
-						OllamaUrl: "http://localhost:11434",
-						Transport: &DryRunTransport{
-							RoundTripFn: modelListRoundtripper(fmt.Errorf("test-GetModelInfo-error")),
-						},
-					},
+					cfg:        getConfigModelsList(fmt.Errorf("test-GetModelInfo-error")),
 				},
 				check: checkError("test-GetModelInfo-error"),
 			},
@@ -450,22 +629,48 @@ func Test_modelsInfoFetcher(t *testing.T) {
 	}
 }
 
-// func Test_modelsInfoFill(t *testing.T) {
-// 	type args struct {
-// 		fetched <-chan pair
-// 	}
-// 	tests := []struct {
-// 		name string
-// 		args args
-// 		want []*ModelItem
-// 	}{
-// 		// TODO: Add test cases.
-// 	}
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			if got := modelsInfoFill(tt.args.fetched); !reflect.DeepEqual(got, tt.want) {
-// 				t.Errorf("modelsInfoFill() = %v, want %v", got, tt.want)
-// 			}
-// 		})
-// 	}
-// }
+func Test_modelsInfoFill(t *testing.T) {
+	type checkModelsInfoFillFn func(*testing.T, []*ModelItem)
+
+	var (
+		fetcher = func(models []string) (chan pair, []*ModelItem) {
+			var (
+				fetched       = make(chan pair)
+				modelItemList = modelsList.getModels(models)
+			)
+
+			go func() {
+				for _, m := range modelItemList {
+					fetched <- pair{name: m.Name, model: m.Model, err: m.Error}
+				}
+				close(fetched)
+			}()
+
+			return fetched, modelItemList
+		}
+
+		tests = []struct {
+			name   string
+			models []string
+			check  checkModelsInfoFillFn
+		}{
+			{
+				name:   "success-one-model",
+				models: []string{modelPhi4},
+			},
+			{
+				name:   "success-two-models",
+				models: []string{modelPhi4, modelLlama3_1},
+			},
+		}
+	)
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			fetched, want := fetcher(tt.models)
+			got := modelsInfoFill(fetched)
+			assert.EqualValues(t, got, want)
+		})
+	}
+}
