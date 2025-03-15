@@ -63,16 +63,6 @@ func (t tags) getConfig(wantError error) *settings.Settings {
 	}
 }
 
-func (m modelsInfo) filter(list []string) modelsInfo {
-	ret := modelsInfo{}
-	for _, key := range list {
-		if value, ok := m[key]; ok {
-			ret[key] = value
-		}
-	}
-	return ret
-}
-
 func (m modelsInfo) getModels(list []string) []*ModelItem {
 	modelItemList := make([]*ModelItem, 0, len(models))
 
